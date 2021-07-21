@@ -1,16 +1,18 @@
 # Copied almost exactly from KernelFunctions.jl.
 
 # Retrieve name of example and output directory
-if length(ARGS) != 2
+if length(ARGS) != 3
     error("please specify the name of the example and the output directory")
 end
-const EXAMPLE = ARGS[1]
-const OUTDIR = ARGS[2]
+const EXAMPLEDIR = ARGS[1]
+const EXAMPLESAVENAME = ARGS[2]
+const OUTDIR = ARGS[3]
 
 # Activate environment
 # Note that each example's Project.toml must include Literate as a dependency
 using Pkg: Pkg
-const EXAMPLEPATH = joinpath(@__DIR__, "..", "examples", EXAMPLE)
+const EXAMPLEPATH = joinpath(@__DIR__, "..", "examples", EXAMPLEDIR)
+@show EXAMPLEPATH
 Pkg.activate(EXAMPLEPATH)
 Pkg.instantiate()
 using Literate: Literate
@@ -47,9 +49,14 @@ end
 
 # Convert to markdown and notebook
 const SCRIPTJL = joinpath(EXAMPLEPATH, "script.jl")
+@show SCRIPTJL
+@show OUTDIR
+@show EXAMPLESAVENAME
 Literate.markdown(
-    SCRIPTJL, OUTDIR; name=EXAMPLE, documenter=false, execute=true, preprocess=preprocess
+    SCRIPTJL, OUTDIR;
+    name=EXAMPLESAVENAME, documenter=false, execute=true, preprocess=preprocess
 )
 Literate.notebook(
-    SCRIPTJL, OUTDIR; name=EXAMPLE, documenter=false, execute=true, preprocess=preprocess
+    SCRIPTJL, OUTDIR;
+    name=EXAMPLESAVENAME, documenter=false, execute=true, preprocess=preprocess
 )

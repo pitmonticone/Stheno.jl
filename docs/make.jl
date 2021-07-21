@@ -12,15 +12,26 @@ const EXAMPLES_OUT = joinpath(@__DIR__, "src", "examples")
 # repeatedly re-build. Alternatively, if you're just working on a single example, either
 # work on the source directly, or work with the literate.jl file to avoid needing to start
 # a fresh Julia session each time you want to run the example.
-examples = [
-    "getting_started"
+basic_gppp_examples = [
+    (
+        path=joinpath("basic_gppp", "process_decomposition"),
+        savename="basic_gppp_process_decomposition",
+    ),
 ]
 
-example_locations = map(example -> joinpath(@__DIR__, "..", "examples", example), examples)
+examples = vcat(
+    (path="getting_started", savename="getting_started"),
+    basic_gppp_examples,
+)
+
+example_locations = map(
+    example -> joinpath(@__DIR__, "..", "examples", example.path),
+    examples,
+)
 
 if ispath(EXAMPLES_OUT)
     map(examples) do example
-        path = joinpath(EXAMPLES_OUT, example)
+        path = joinpath(EXAMPLES_OUT, example.path)
         println(path)
         isdir(path) && rm(path; recursive=true)
     end
@@ -31,10 +42,10 @@ end
 
 let script = "using Pkg; Pkg.activate(ARGS[1]); Pkg.instantiate()"
     for example in examples
-        if !success(`$(Base.julia_cmd()) -e $script $example`)
+        if !success(`$(Base.julia_cmd()) -e $script $(example.path)`)
             error(
                 "project environment of example ",
-                basename(example),
+                basename(example.path),
                 " could not be instantiated",
             )
         end
@@ -44,11 +55,15 @@ end
 # Run examples asynchronously
 literate_path = joinpath(@__DIR__, "literate.jl")
 processes = map(examples) do example
+    display(example)
+    println()
+
+    # Run the example and produce a notebook.
     return run(
         pipeline(
-            `$(Base.julia_cmd()) $literate_path $(basename(example)) $EXAMPLES_OUT`;
-            stdin=devnull,
-            stdout=devnull,
+            `$(Base.julia_cmd()) $literate_path $(example.path) $(example.savename) $EXAMPLES_OUT`;
+            stdin=stdin,
+            stdout=stdout,
             stderr=stderr,
         );
         wait=true,
@@ -82,6 +97,10 @@ makedocs(
         "Kernel Design" => "kernel_design.md",
         "Internals" => "internals.md",
         "API" => "api.md",
+        "Examples" => map(
+            example -> joinpath("examples", example.savename * ".md"),
+            basic_gppp_examples,
+        ),
     ],
     doctestfilters=[
         r"{([a-zA-Z0-9]+,\s?)+[a-zA-Z0-9]+}",

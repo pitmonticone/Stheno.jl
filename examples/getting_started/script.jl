@@ -259,7 +259,7 @@ prop = NUTS{MultinomialTS, GeneralisedNoUTurn}(int)
 adaptor = StanHMCAdaptor(n_adapts, Preconditioner(metric), NesterovDualAveraging(0.8, int.ϵ))
 
 # Perform inference.
-samples, stats = sample(h, prop, θ0_flat, n_samples, adaptor, n_adapts; progress=true)
+samples, stats = sample(h, prop, θ0_flat, n_samples, adaptor, n_adapts; progress=false)
 
 # Inspect posterior distribution over hyperparameters.
 hypers = map(unpack, samples);
